@@ -3,8 +3,8 @@
     "author": "Cauchy.Ke",
     "publisher": "CauchyKe",
     "displayName": "fine-i18n-tool",
-    "description": "",
-    "version": "0.0.4",
+    "description": "i18n inlay hints & completion for JS/TS; FDL monorepo workspace info (status bar, dev URLs, port checks).",
+    "version": "0.0.5",
     "engines": {
         "vscode": "^1.96.0"
     },
@@ -12,39 +12,127 @@
         "Other"
     ],
     "icon": "images/icon.jpg",
+    "extensionKind": [
+        "ui",
+        "workspace"
+    ],
+    "capabilities": {
+        "untrustedWorkspaces": {
+            "supported": true
+        }
+    },
     "activationEvents": [
         "onLanguage:javascript",
-        "onLanguage:typescript"
+        "onLanguage:typescript",
+        "onStartupFinished"
     ],
     "main": "./dist/extension.js",
     "contributes": {
-        "commands": [],
-        "configuration": {
-            "type": "object",
-            "title": "fine-i18n-tool",
-            "properties": {
-                "fineI18nTool.i18nFileSuffix": {
-                    "type": "string",
-                    "default": "_zh_CN.properties, zh_CN.json",
-                    "description": "国际化文件后缀，多个之间用,隔开，当前支持properties和json格式的文件"
-                },
-                "fineI18nTool.i18nFuncName": {
-                    "type": "string",
-                    "default": "t",
-                    "description": "国际化方法名称"
+        "commands": [
+            {
+                "command": "fdlWorkspaceInfo.refresh",
+                "title": "Refresh Workspace Info",
+                "icon": "$(refresh)"
+            },
+            {
+                "command": "fdlWorkspaceInfo.openConfig",
+                "title": "Open FUI Adapter Config",
+                "icon": "$(go-to-file)"
+            },
+            {
+                "command": "fdlWorkspaceInfo.openItem",
+                "title": "Open URL"
+            },
+            {
+                "command": "fdlWorkspaceInfo.showActions",
+                "title": "Show Workspace Info Actions"
+            }
+        ],
+        "configuration": [
+            {
+                "title": "fine-i18n-tool",
+                "properties": {
+                    "fineI18nTool.i18nFileSuffix": {
+                        "type": "string",
+                        "default": "_zh_CN.properties, zh_CN.json",
+                        "description": "国际化文件后缀，多个之间用,隔开，当前支持properties和json格式的文件"
+                    },
+                    "fineI18nTool.i18nFuncName": {
+                        "type": "string",
+                        "default": "t",
+                        "description": "国际化方法名称"
+                    }
+                }
+            },
+            {
+                "title": "FDL Workspace Info",
+                "properties": {
+                    "fdlWorkspaceInfo.statusBar.alignment": {
+                        "type": "string",
+                        "enum": [
+                            "left",
+                            "right"
+                        ],
+                        "default": "left",
+                        "description": "FDL Workspace Info 状态栏项显示在左侧还是右侧。"
+                    },
+                    "fdlWorkspaceInfo.statusBar.priority": {
+                        "type": "number",
+                        "default": 100,
+                        "description": "FDL Workspace Info 状态栏项的优先级；同侧中数值越大越靠左。"
+                    },
+                    "fdlWorkspaceInfo.portCheck.enabled": {
+                        "type": "boolean",
+                        "default": true,
+                        "description": "关闭后将跳过 TCP 端口探测；仍显示 URL，但不再给出端口告警。"
+                    },
+                    "fdlWorkspaceInfo.portCheck.timeoutMs": {
+                        "type": "number",
+                        "default": 1500,
+                        "minimum": 500,
+                        "maximum": 60000,
+                        "description": "每次 TCP 探测的连接超时时间（毫秒）。"
+                    },
+                    "fdlWorkspaceInfo.portCheck.intervalMs": {
+                        "type": "number",
+                        "default": 0,
+                        "minimum": 0,
+                        "maximum": 3600000,
+                        "description": "按该间隔自动重新探测端口；设为 0 表示关闭定时刷新。"
+                    },
+                    "fdlWorkspaceInfo.portCheck.confirmOccupied": {
+                        "type": "boolean",
+                        "default": true,
+                        "description": "若首次探测为已占用，则等待后再探测一次；两次都占用才判定为占用（可减少瞬时误报）。"
+                    },
+                    "fdlWorkspaceInfo.portCheck.confirmDelayMs": {
+                        "type": "number",
+                        "default": 400,
+                        "minimum": 0,
+                        "maximum": 5000,
+                        "description": "进行第二次占用确认探测前的等待时间（毫秒）。"
+                    },
+                    "fdlWorkspaceInfo.portCheck.focusDebounceMs": {
+                        "type": "number",
+                        "default": 400,
+                        "minimum": 0,
+                        "maximum": 10000,
+                        "description": "窗口重新获得焦点后，延迟刷新端口状态的防抖时间（毫秒）。"
+                    }
                 }
             }
-        }
+        ]
     },
     "repository": {
         "type": "git",
         "url": "https://github.com/likeke1997/fine-i18n-tool"
-      },
+    },
     "scripts": {
         "vscode:prepublish": "pnpm run package",
         "compile": "webpack",
         "watch": "webpack --watch",
         "package": "webpack --mode production --devtool hidden-source-map",
+        "package:vsix": "pnpm run package && pnpm exec vsce package --no-dependencies --allow-missing-repository",
         "compile-tests": "tsc -p . --outDir out",
         "watch-tests": "tsc -p . -w --outDir out",
         "pretest": "pnpm run compile-tests && pnpm run compile && pnpm run lint",
@@ -63,6 +151,7 @@
         "@typescript-eslint/parser": "^8.25.0",
         "@vscode/test-cli": "^0.0.10",
         "@vscode/test-electron": "^2.4.1",
+        "@vscode/vsce": "^2.26.0",
         "eslint": "^9.21.0",
         "properties-reader": "^2.3.0",
         "ts-loader": "^9.5.2",

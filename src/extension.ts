@@ -7,6 +7,7 @@ import * as vscode from 'vscode';
 import PACKAGE from '../package.json';
 import { getConfiguration, setConfiguration } from './configuration';
 import { formatI18nValue } from './util';
+import { activateFdlWorkspaceInfo, deactivateFdlWorkspaceInfo } from './fdlWorkspaceInfo';
 
 /**
  * 国际化字典
@@ -142,7 +143,7 @@ async function loadI18nFiles(uris?: vscode.Uri[]) {
     });
 }
 
-export async function activate() {
+export async function activate(context: vscode.ExtensionContext) {
     const configuration = setConfiguration({
         i18nFileSuffixList: (vscode.workspace.getConfiguration('fineI18nTool').get('i18nFileSuffix') as string).split(',').map((str) => str.trim()),
         i18nFuncName: vscode.workspace.getConfiguration('fineI18nTool').get('i18nFuncName') as string,
@@ -154,4 +155,9 @@ export async function activate() {
     registerI18nDocumentsLoad();
     registerCompletionItemProvider();
     registerInlayHintsProvider();
+    activateFdlWorkspaceInfo(context);
+}
+
+export function deactivate() {
+    deactivateFdlWorkspaceInfo();
 }
